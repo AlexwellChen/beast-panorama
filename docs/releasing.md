@@ -19,6 +19,8 @@ The workflows build artifacts but **do not publish releases automatically**. A s
 - `--self-check`: launch-independent package check; no hardware access. Metal may be unavailable in CI.
 - `--require-sdk`, `--require-metal`: tighten the self-check for a suitable local environment.
 
-## Before creating the GitHub repository
+## GitHub repository
 
-Create a public repository without generating another README/license, set its URL as this repository's remote, then push your reviewed commit. Enable Issues, private vulnerability reporting and branch protection requiring CI. No repository URL is hard-coded here because the hosting account/name has not been selected.
+The source repository is https://github.com/AlexwellChen/beast-panorama.
+
+Push reviewed changes to `main` and wait for CI. Create a version tag pointing to the tested commit, then create a GitHub Release with the SDK-free DMG and checksum. Keep experimental releases marked as pre-release until the compatibility claims are validated. Enable private vulnerability reporting and branch protection requiring CI in repository settings.

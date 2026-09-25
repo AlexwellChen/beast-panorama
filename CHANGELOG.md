@@ -1,12 +1,12 @@
 # Changelog
 
-## Unreleased
+## 0.2.0 — 2026-09-25 (public preview)
 
 - Prepare the repository for public development with documentation, CI and contribution templates.
 - Make SDK-free app and DMG builds the default; select an external SDK for head tracking.
 - Add clean-checkout and repository hygiene checks.
 
-## 0.2.0 — Local prototype
+### Player features
 
 - Native panorama image/video playback and experimental Beast 3DoF tracking.
 - Floating playback controls, seeking, audio, fullscreen and remembered preferences.
