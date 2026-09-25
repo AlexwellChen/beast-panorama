@@ -1,0 +1,25 @@
+name: Bug report
+description: Report a reproducible playback, UI or headset issue.
+body:
+  - type: markdown
+    attributes:
+      value: Do not attach private videos, device serial numbers, SDK binaries or unredacted USB logs.
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: macOS, Mac chip, app version/commit, glasses model, firmware and SDK version (if applicable).
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Reproduction steps
+      description: Include expected and actual behavior, display mode, and whether mouse mode also reproduces it.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: Redacted errors, media codec/dimensions/frame rate, or measured refresh/readback. Commands returning success alone do not prove a mode changed.

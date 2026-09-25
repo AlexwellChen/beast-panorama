@@ -1,0 +1,41 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Verify repository boundary
+        run: ./scripts/check-repo.sh
+      - name: Run hardware-independent regression checks
+        run: ./scripts/test.sh
+      - name: Build SDK-free app and DMG
+        run: ./scripts/build-dmg.sh
+      - name: Check that public DMG has no vendor SDK
+        run: |
+          mount_dir=$(mktemp -d)
+          hdiutil attach -readonly -nobrowse -mountpoint "$mount_dir" dist/public/*.dmg
+          trap 'hdiutil detach "$mount_dir"' EXIT
+          test ! -d "$mount_dir/Beast Panorama.app/Contents/Frameworks/VITURE"
+          codesign --verify --deep --strict "$mount_dir/Beast Panorama.app"
+          "$mount_dir/Beast Panorama.app/Contents/MacOS/BeastPanorama" --self-check
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: beast-panorama-arm64-sdk-free
+          path: |
+            dist/public/*.dmg
+            dist/public/*.sha256
+          if-no-files-found: error
+          retention-days: 14

@@ -1,0 +1,24 @@
+Beast Panorama · Apple Silicon
+
+安装：将 Beast Panorama 拖入 Applications，再从应用程序打开。
+要求：Apple Silicon Mac、macOS 13 或更新系统。
+
+此公开构建不包含 VITURE 专有 SDK。无需眼镜即可用鼠标观看。
+如需头追，请自行从 https://www.viture.com/developer 获取 macOS arm64 XR Glasses SDK，
+在「眼镜 → 选择 SDK…」中选择 libglasses.dylib；程序会记住该位置。
+
+打开或拖入 2:1 全景视频、图片。
+空格：播放/暂停    R：居中    F：全屏    Esc：退出全屏
+左右键：跳转 5 秒    M：静音    ⌘O：打开    ⌘,：显示设置
+
+调小视场角可放大景物；全屏使画面铺满眼镜显示区域。
+HDR 当前以 SDR 预览，不支持立体视频。
+120Hz 为实验性选项，切换后校验设备与 macOS，失败回退 60Hz。
+测试设备尚未实际切到 120Hz；不要把设置命令返回成功视为高刷生效。
+正常退出时尝试恢复原显示模式；强制退出无法恢复。
+
+此构建使用 ad-hoc 签名，未经过 Apple Developer ID 签名和公证。
+若系统阻止打开，按照 macOS 的隐私与安全性提示确认来源；不需要关闭全局安全保护。
+
+应用源码使用 MIT 许可证。VITURE SDK 不属于 MIT 授权范围。
+这是独立社区项目，并非 VITURE 官方软件。

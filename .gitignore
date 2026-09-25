@@ -1,0 +1,29 @@
+# Build products, local logs and packaging output
+.build/
+.swiftpm/
+dist/
+*.app/
+*.dmg
+*.dmg.sha256
+*.log
+
+# Vendor SDK: never commit proprietary headers or binaries
+SDK/*
+!SDK/README.md
+*.dylib
+*.framework/
+*.xcframework/
+
+# Private media and local settings
+*.mp4
+*.mov
+*.mkv
+*.hevc
+.env
+.env.*
+!.env.example
+.DS_Store
+*.xcuserstate
+xcuserdata/
+.idea/
+.vscode/
