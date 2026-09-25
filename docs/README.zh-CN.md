@@ -14,6 +14,8 @@ Apple Silicon 上的原生 360° 全景播放器，支持 VITURE Beast 实验性
 
 ## 构建
 
+直接安装请前往 [Releases](https://github.com/AlexwellChen/beast-panorama/releases/tag/v0.2.0)，下载 **`Beast-Panorama-0.2.0-arm64-with-sdk.dmg`**。此版内置本机已验证的专有 SDK，无需另外下载或选择 SDK。请先阅读发布说明中的 SDK 条款、来源及尚未完成的第三方合规核查说明。仓库和默认构建仍不包含 SDK。
+
 需要 Apple Silicon Mac、macOS 13+、Swift 5.9+ 和 Apple Command Line Tools 或 Xcode。
 
 ```sh

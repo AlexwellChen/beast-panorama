@@ -18,6 +18,8 @@ Built with Swift, AppKit, Metal and AVFoundation. Open local equirectangular ima
 
 ## Requirements
 
+For a ready-to-use installation, download **`Beast-Panorama-0.2.0-arm64-with-sdk.dmg`** from [Releases](https://github.com/AlexwellChen/beast-panorama/releases/tag/v0.2.0). It includes the locally tested proprietary SDK; no separate SDK selection is needed. Review its SDK terms, provenance and outstanding third-party compliance disclosures in the release notes. An SDK-free DMG is also available. The source repository and default builds remain SDK-free.
+
 - Apple Silicon Mac, macOS 13 or later.
 - Xcode or Apple Command Line Tools with Swift 5.9 or newer to build.
 - Optional: VITURE Beast and a separately obtained macOS arm64 VITURE XR Glasses SDK. Development was tested against SDK 2.4.0.

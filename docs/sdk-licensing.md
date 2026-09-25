@@ -2,6 +2,10 @@
 
 Reviewed 2026-09-25. This records the available evidence and release decision, not a legal opinion.
 
+## Subsequent release update
+
+At the maintainer's explicit direction, v0.2.0 now also offers a `with-sdk.dmg` application bundle. It includes the previously tested SDK binaries, SDK-specific end-user terms, privacy information, available upstream notices and provenance disclosures. The binary-specific third-party compliance questions below remain unresolved; publishing the bundle does not establish that those requirements have been satisfied. The following sections preserve the original review rationale. The repository and default build still exclude vendor binaries.
+
 ## What the vendor permits
 
 The [VITURE SDK License Agreement](https://www.viture.com/viture-sdk-license-agreement), effective September 2025, is proprietary, not an open-source license. Section 1.3 permits object-code distribution as a component of a developed application, subject to the rest of the agreement. It does not grant permission to publish a standalone SDK or relicense it under MIT. A community wrapper's BSD/MIT license does not cover the vendor binaries.
