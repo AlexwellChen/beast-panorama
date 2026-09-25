@@ -1,5 +1,7 @@
 # Release guide
 
+Release update: v0.2.0 also offers a manually packaged `with-sdk.dmg` at the maintainer's direction. Its executable is unchanged from the v0.2.0 tag; packaging adds the tested SDK libraries, end-user terms, available notices and provenance disclosures. The SDK compliance questions remain open. The automated process below continues to produce the SDK-free variant.
+
 ## Public release
 
 1. Update `VERSION`, `Resources/Info.plist` build number and `CHANGELOG.md`.

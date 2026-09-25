@@ -36,6 +36,6 @@ open 'dist/public/Beast Panorama.app'
 
 默认生成不含专有 SDK 的公开分发包。本地 ad-hoc 签名尚未经过 Apple 公证。以前用于本机测试的 SDK 内置版 DMG 不应直接发布。
 
-官方协议允许有条件地随应用分发 SDK，但当前镜像二进制对应的完整合规材料尚未核实，因此本次公开版不内置 SDK。详见 [授权核查](sdk-licensing.md) 和 [隐私说明](../Resources/Privacy.txt)。
+官方协议允许有条件地随应用分发 SDK，但当前镜像二进制对应的完整合规材料尚未核实。默认构建不含 SDK；Release 另提供附带条款和声明的内置版。详见 [授权核查](sdk-licensing.md) 和 [隐私说明](../Resources/Privacy.txt)。
 
 更多信息：[贡献指南](../CONTRIBUTING.md)、[硬件实测](hardware.md)、[发布流程](releasing.md)、[第三方说明](../THIRD_PARTY_NOTICES.md)。
