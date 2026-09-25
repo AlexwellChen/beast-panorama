@@ -1,0 +1,16 @@
+Beast Panorama — 隐私说明 / Privacy
+更新日期 / Updated: 2026-09-25
+
+应用在本机读取你选择的全景文件，使用眼镜姿态控制视角。应用代码没有媒体上传、账户、广告或分析上报功能。媒体路径、SDK 路径及播放偏好保存在本机 macOS 偏好设置中。头部姿态在内存中处理；显式启用命令行诊断时，姿态和设备状态可能输出到本机终端。请不要公开含私人路径或设备信息的诊断输出。
+
+如使用外部 VITURE SDK，它属于独立的专有依赖。本应用不初始化其可选统计上报器，但没有审计闭源 SDK 的全部内部行为，不能保证其完全无网络通信。厂商的协议和隐私政策另行适用：
+https://www.viture.com/viture-sdk-license-agreement
+https://www.viture.com/privacy-policy
+
+The application processes selected local media and headset orientation on your Mac. Its code has no media upload, account, advertising or analytics feature. Media/SDK paths and playback preferences are stored in local macOS preferences. Orientation is processed in memory; explicitly enabled command-line diagnostics can print orientation and device state locally. Avoid sharing private paths or device details in reports.
+
+An externally supplied VITURE SDK is a separate proprietary dependency. The application does not initialize its optional statistics reporter. The closed-source SDK has not been fully audited, so this is not a guarantee that it never communicates over a network. The vendor's agreement and privacy policy apply separately.
+
+项目反馈 / Project contact:
+https://github.com/AlexwellChen/beast-panorama/issues
+请勿在公开 issue 中提供个人信息 / Do not post personal information in public issues.

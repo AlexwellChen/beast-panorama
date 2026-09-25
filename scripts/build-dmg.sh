@@ -18,7 +18,7 @@ APP="$WORK/build/Beast Panorama.app"
 mkdir -p "$WORK/stage" dist/public
 ditto --noextattr "$APP" "$WORK/stage/Beast Panorama.app"
 ln -s /Applications "$WORK/stage/Applications"
-cp Resources/使用说明.txt "$WORK/stage/安装与使用.txt"
+cp "$APP/Contents/Resources/使用说明.txt" "$WORK/stage/安装与使用.txt"
 DMG="dist/public/Beast-Panorama-$VERSION-arm64$FLAVOR.dmg"
 hdiutil create -volname 'Beast Panorama' -srcfolder "$WORK/stage" -format UDZO -fs HFS+ -ov "$DMG"
 hdiutil verify "$DMG"

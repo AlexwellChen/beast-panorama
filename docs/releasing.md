@@ -11,6 +11,8 @@
 
 The workflows build artifacts but **do not publish releases automatically**. A signed DMG does not establish permission to redistribute proprietary contents. Old files at `dist/` may be SDK-bundled personal prototypes; do not upload them.
 
+See [SDK licensing review](sdk-licensing.md) for the conditional vendor grant and unresolved materials required before a public bundled release.
+
 ## Build options
 
 - `BEAST_BUILD_ROOT`: destination directory for the generated app; defaults to `dist/public`.

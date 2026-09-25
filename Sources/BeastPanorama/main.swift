@@ -143,10 +143,19 @@ final class App: NSObject, NSApplicationDelegate, NSWindowDelegate {
             for (title,action,key) in entries { let i=NSMenuItem(title:title,action:action,keyEquivalent:key); i.target=self; sub.addItem(i) }
             parent.submenu=sub; menu.addItem(parent)
         }
-        group("Beast Panorama",[("关于 Beast Panorama",#selector(about),""),("退出 Beast Panorama",#selector(quit),"q")])
+        group("Beast Panorama",[("关于 Beast Panorama",#selector(about),""),("隐私说明…",#selector(privacy),""),("退出 Beast Panorama",#selector(quit),"q")])
         group("文件",[("打开全景…",#selector(openFile),"o"),("重新打开上次文件",#selector(openLast),""),("显示校准图",#selector(calibration),"")])
         group("观看",[("播放 / 暂停",#selector(togglePlayback),""),("居中视线",#selector(recenter),""),("移到眼镜屏幕",#selector(moveDisplay),""),("全屏",#selector(fullscreen),"")])
         group("眼镜",[("显示设置…",#selector(displaySettings),","),("连接 / 断开",#selector(connect),""),("选择 SDK…",#selector(selectSDK),"")])
+    }
+    @objc func privacy() {
+        if let url = Bundle.main.url(forResource: "Privacy", withExtension: "txt") {
+            NSWorkspace.shared.open(url)
+        } else {
+            let alert = NSAlert(); alert.messageText = "隐私说明"
+            alert.informativeText = "请查看项目 Resources/Privacy.txt；打包版本内附完整说明。"
+            alert.runModal()
+        }
     }
     func interact() { lastInteraction=ProcessInfo.processInfo.systemUptime; showChrome(true) }
     func showChrome(_ visible:Bool) {

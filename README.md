@@ -55,6 +55,8 @@ The current UI is in Simplified Chinese.
 
 Produces `dist/public/Beast-Panorama-0.2.0-arm64.dmg` and a SHA-256 checksum. The default DMG contains **no vendor SDK** and supports selecting an external SDK after installation. It is ad-hoc signed, not Developer ID signed or notarized. Do not publish the earlier private, SDK-bundled test DMG as an open-source release.
 
+The vendor permits conditional SDK bundling, but this release has not verified all distribution requirements for the available binary. See [SDK licensing](docs/sdk-licensing.md) and [privacy](Resources/Privacy.txt).
+
 See [release instructions](docs/releasing.md) for clean builds and the optional private SDK-bundled build.
 
 ## Project structure

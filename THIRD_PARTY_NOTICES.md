@@ -4,7 +4,7 @@
 
 VITURE XR Glasses SDK is a separate proprietary dependency, owned and licensed by its respective rights holders. The application source license does not grant rights to this SDK, its headers, firmware, trademarks or media.
 
-Vendor binaries and headers are excluded from the repository and public DMG builds. Obtain the macOS arm64 SDK from https://www.viture.com/developer and follow its terms. Verify redistribution rights separately before sharing any SDK-bundled build. Community mirrors are not evidence of redistribution permission.
+Vendor binaries and headers are excluded from the repository and public DMG builds. Obtain the macOS arm64 SDK from https://www.viture.com/developer and follow its terms. The official SDK agreement permits conditional object-code distribution within applications (§1.3), but this release has not verified the full compliance materials for the mirrored macOS binary. See [the licensing review](docs/sdk-licensing.md). Community wrapper licenses do not cover the SDK.
 
 The Swift adapter was developed against the SDK 2.4.0 public C API. API documentation: https://www.viture.com/en-SG/developer/glasses-sdk/glasses.
 
