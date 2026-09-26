@@ -14,7 +14,7 @@ Apple Silicon 上的原生 360° 全景播放器，支持 VITURE Beast 实验性
 
 ## 构建
 
-直接安装请前往 [Releases](https://github.com/AlexwellChen/beast-panorama/releases/tag/v0.2.0)，下载 **`Beast-Panorama-0.2.0-arm64-with-sdk.dmg`**。此版内置本机已验证的专有 SDK，无需另外下载或选择 SDK。请先阅读发布说明中的 SDK 条款、来源及尚未完成的第三方合规核查说明。仓库和默认构建仍不包含 SDK。
+直接安装请前往 [Releases](https://github.com/AlexwellChen/beast-panorama/releases/tag/v0.3.0)，下载 **`Beast-Panorama-0.3.0-arm64-with-sdk.dmg`**。此版内置本机已验证的专有 SDK，无需另外下载或选择 SDK。请先阅读发布说明中的 SDK 条款、来源及尚未完成的第三方合规核查说明。仓库和默认构建仍不包含 SDK。
 
 需要 Apple Silicon Mac、macOS 13+、Swift 5.9+ 和 Apple Command Line Tools 或 Xcode。
 
@@ -28,7 +28,13 @@ open 'dist/public/Beast Panorama.app'
 
 快捷键：空格播放/暂停、R 居中、F 全屏、Esc 退出全屏、左右键跳转 5 秒、M 静音、⌘O 打开、⌘, 显示设置。
 
+按住鼠标左键拖动画面可调整观看方向，头追开启时同样有效。鼠标偏移与头部转动叠加；按 R 清除偏移并按当前头部姿势重新居中。
+
+显示设置新增「画面缩放」（40–200%，超过 100% 裁切边缘）与「景物放大 · 视场角」（20–90°，向右拖动放大景物）。两者都保留当前头追模式，不改变光学焦距或真实观看距离。「放大观看」一键铺满画面并设为 45° 视场。
+
 ## 打包
+
+眼镜显示设置提供 1920×1080 / 1920×1200 输出选择（切换时使用 60Hz），保留软件头追。只有 SDK 模式与 macOS 原生像素模式均匹配才报告成功；HiDPI 缩放不算原生输出。未确认生效时恢复之前的模式。
 
 ```sh
 ./scripts/build-dmg.sh

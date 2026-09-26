@@ -6,6 +6,16 @@ func mappedPose(_ q: simd_quatf) -> simd_quatf {
     // The generic header's NWU description does not match this device output.
     return simd_normalize(q)
 }
+
+func viewingRotation(yaw: Float, pitch: Float, head: simd_quatf? = nil) -> simd_quatf {
+    let horizontal = simd_quatf(angle: yaw, axis: SIMD3(0,1,0))
+    let vertical = simd_quatf(angle: pitch, axis: SIMD3(1,0,0))
+    // Yaw uses world up; pitch uses the tracked camera's local right axis.
+    // Applying pitch before head rotation makes a sideways head turn turn it into roll.
+    return simd_normalize(horizontal
+        * (head ?? simd_quatf(angle: 0, axis: SIMD3(0,1,0))) * vertical)
+}
+
 final class PoseStore {
     static let shared = PoseStore()
     private let lock = NSLock()

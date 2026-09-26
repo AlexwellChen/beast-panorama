@@ -12,10 +12,10 @@ final class App: NSObject, NSApplicationDelegate, NSWindowDelegate {
     let subtitle = label("360° 全景播放器", size: 12, secondary: true)
     let connection = label("鼠标环视", size: 12, weight: .medium)
     let elapsed = label("0:00", size: 12), remaining = label("−0:00", size: 12)
-    let hint = label("空格 播放 / 暂停    R 居中    ← → 跳转 5 秒    F 全屏", size: 11, secondary: true)
+    let hint = label("拖动画面 调整方向    空格 播放 / 暂停    R 居中    ← → 跳转    F 全屏", size: 11, secondary: true)
     let timeline = NSSlider(value: 0, minValue: 0, maxValue: 1, target: nil, action: nil)
     let volume = NSSlider(value: 0.7, minValue: 0, maxValue: 1, target: nil, action: nil)
-    let fieldOfView = NSSlider(value: 60, minValue: 30, maxValue: 90, target: nil, action: nil)
+    let fieldOfView = NSSlider(value: 60, minValue: 20, maxValue: 90, target: nil, action: nil)
     let fovLabel = label("视场 60°", size: 12)
     var playButton: NSButton!, connectButton: NSButton!, muteButton: NSButton!
     var tickTimer: Timer?, inputMonitor: Any?
@@ -24,9 +24,13 @@ final class App: NSObject, NSApplicationDelegate, NSWindowDelegate {
     var connectDeadline = 0.0
     var noticeUntil = 0.0
     var refreshPicker: NSPopUpButton?
+    var resolutionPicker: NSPopUpButton?
+    var switchingResolution = false
     var dutyPicker: NSPopUpButton?
     var settingsPanel: NSPanel?
     var brightnessSlider: NSSlider?, tintSlider: NSSlider?
+    var screenScaleSlider: NSSlider?, settingsFOVSlider: NSSlider?
+    var screenScaleText: NSTextField?, settingsFOVText: NSTextField?
     var brightnessText: NSTextField?, tintText: NSTextField?, hardwareStatus: NSTextField?
     var pendingFile: URL?
     var currentURL: URL?
@@ -58,6 +62,8 @@ final class App: NSObject, NSApplicationDelegate, NSWindowDelegate {
         buildHeader(root); buildControls(root); buildWelcome(root)
         fieldOfView.doubleValue = UserDefaults.standard.object(forKey:"fov") as? Double ?? 60
         view.fov = Float(fieldOfView.doubleValue)
+        let savedScale = UserDefaults.standard.object(forKey:"screenScale") as? Double ?? 1
+        view.screenScale = savedScale.isFinite ? Float(min(2,max(0.4,savedScale))) : 1
         volume.doubleValue = UserDefaults.standard.object(forKey:"volume") as? Double ?? 0.7
         view.onFileDrop = { [weak self] url in self?.open(url) }
         view.onInteraction = { [weak self] in self?.interact() }
@@ -191,7 +197,9 @@ final class App: NSObject, NSApplicationDelegate, NSWindowDelegate {
             if let error=video.errorMessage { hint.stringValue="播放失败："+error; showChrome(true); return }
         } else { elapsed.stringValue="0:00"; remaining.stringValue="−0:00"; timeline.doubleValue=0 }
         fovLabel.stringValue="视场 \(Int(view.fov))°"; fieldOfView.doubleValue=Double(view.fov)
-        if now>noticeUntil { hint.stringValue="空格 播放 / 暂停    R 居中    ← → 跳转 5 秒    F 全屏    M 静音" }
+        settingsFOVSlider?.doubleValue=Double(110-view.fov)
+        settingsFOVText?.stringValue="景物放大 · 视场角 \(Int(view.fov))°"
+        if now>noticeUntil { hint.stringValue="拖动画面 调整方向    空格 播放 / 暂停    R 居中    ← → 跳转    F 全屏" }
         let pointer=window.mouseLocationOutsideOfEventStream
         let hovering=NSPointInRect(pointer,controls.frame) || NSPointInRect(pointer,header.frame)
         if video?.isPlaying == true && now-lastInteraction>3.5 && now>noticeUntil && !hovering && !trackingLost && window.attachedSheet == nil { showChrome(false) }
@@ -243,6 +251,7 @@ final class App: NSObject, NSApplicationDelegate, NSWindowDelegate {
         do { try view.calibration(); welcome.isHidden=true; titleLabel.stringValue="方向校准"; subtitle.stringValue="左转看 LEFT，抬头看 UP · R 居中"; interact() } catch { showError(error) }
     }
     @objc func connect() {
+        guard !switchingResolution else { return }
         if sdk.connected { view.tracking=false; connecting=false; let result=sdk.disconnect(); notice(result.isEmpty ? "眼镜已断开" : result); return }
         if let url=sdkURL() { connectSDK(url) } else { selectSDK() }
     }
@@ -264,8 +273,17 @@ final class App: NSObject, NSApplicationDelegate, NSWindowDelegate {
         interact()
         let settings=sdk.displaySettings()
         print("DISPLAY SETTINGS brightness=\(String(describing:settings.brightness)) duty=\(String(describing:settings.duty)) tint=\(String(describing:settings.tint)) mode=\(String(describing:settings.mode))")
-        let panel=NSPanel(contentRect:NSRect(x:0,y:0,width:550,height:510),styleMask:[.titled],backing:.buffered,defer:false)
+        if settingsPanel != nil { return }
+        let panel=NSPanel(contentRect:NSRect(x:0,y:0,width:550,height:640),styleMask:[.titled],backing:.buffered,defer:false)
         panel.title="眼镜显示设置"; settingsPanel=panel
+        let scale=NSSlider(value:Double(view.screenScale)*100,minValue:40,maxValue:200,target:self,action:#selector(adjustScreenScale))
+        scale.isContinuous=true; scale.setAccessibilityLabel("画面缩放")
+        scale.toolTip="100% 铺满画布；超过 100% 放大并裁切边缘，头追继续有效"
+        screenScaleSlider=scale; screenScaleText=label("画面缩放  \(Int((view.screenScale*100).rounded()))%",size:14)
+        let lens=NSSlider(value:Double(110-view.fov),minValue:20,maxValue:90,target:self,action:#selector(adjustSettingsFOV))
+        lens.isContinuous=true; lens.setAccessibilityLabel("景物放大")
+        lens.toolTip="向右拖动让景物更大、更有靠近感；不会改变画面外框大小"
+        settingsFOVSlider=lens; settingsFOVText=label("景物放大 · 视场角 \(Int(view.fov))°",size:14)
         let b=NSSlider(value:Double(settings.brightness ?? 0),minValue:0,maxValue:8,target:self,action:#selector(adjustBrightness))
         b.numberOfTickMarks=9; b.allowsTickMarkValuesOnly=true; b.isContinuous=false
         b.isEnabled=settings.brightness != nil; b.setAccessibilityLabel("眼镜亮度")
@@ -287,16 +305,52 @@ final class App: NSObject, NSApplicationDelegate, NSWindowDelegate {
         refresh.addItem(withTitle:"尝试 120Hz · 自动校验"); refresh.lastItem?.tag=120
         refresh.selectItem(withTag:sdk.refreshRate); refresh.isEnabled=sdk.connected
         refresh.target=self; refresh.action=#selector(adjustRefresh); refresh.setAccessibilityLabel("显示刷新率"); refreshPicker=refresh
-        hardwareStatus=label("调整会应用到眼镜，并保留硬件设置。",size:12,secondary:true)
-        let note=NSTextField(wrappingLabelWithString:"120Hz 需眼镜与 macOS 同时支持，切换失败会退回 60Hz。\n画面占满：按 F 全屏。景物放大：调小主界面的视场角。\n原生屏幕尺寸与距离调节不适用于当前头追模式。")
+        let resolution=NSPopUpButton(frame:.zero,pullsDown:false)
+        resolution.addItem(withTitle:"1920 × 1080 · 60Hz"); resolution.lastItem?.tag=1080
+        resolution.addItem(withTitle:"1920 × 1200 · 60Hz"); resolution.lastItem?.tag=1200
+        resolution.selectItem(withTag:sdk.resolutionHeight ?? 1080)
+        resolution.isEnabled=sdk.connected
+        resolution.target=self; resolution.action=#selector(adjustResolution)
+        resolution.setAccessibilityLabel("眼镜输出分辨率"); resolutionPicker=resolution
+        hardwareStatus=label("画面调节在播放器内生效；亮度等设置会应用到眼镜。",size:12,secondary:true)
+        let note=NSTextField(wrappingLabelWithString:"100% 铺满画布，超过 100% 放大并裁切边缘；头追保持不变。\n这些是画面缩放，不改变眼镜光学焦距或真实观看距离。\n120Hz 需眼镜与 macOS 同时支持，失败会退回 60Hz。")
         note.font = .systemFont(ofSize:13); note.textColor = .secondaryLabelColor
-        let content=NSStackView(views:[label("眼镜与画面",size:21,weight:.semibold),brightnessText!,b,tintText!,t,row([label("屏幕发光占空比",size:14),duty]),row([label("显示刷新率",size:14),refresh]),note,hardwareStatus!,button("完成",symbol:"checkmark",action:#selector(closeSettings),help:"关闭显示设置")])
-        content.orientation = .vertical; content.alignment = .leading; content.spacing=14
+        let content=NSStackView(views:[label("眼镜与画面",size:21,weight:.semibold),screenScaleText!,scale,settingsFOVText!,lens,brightnessText!,b,tintText!,t,row([label("屏幕发光占空比",size:14),duty]),row([label("输出分辨率",size:14),resolution]),row([label("显示刷新率",size:14),refresh]),note,hardwareStatus!,row([button("放大观看",symbol:"plus.magnifyingglass",action:#selector(enlargeView),help:"画面铺满，视场角 45°，头追保持不变"),button("完成",symbol:"checkmark",action:#selector(closeSettings),help:"关闭显示设置")])])
+        content.orientation = .vertical; content.alignment = .leading; content.spacing=8
         b.widthAnchor.constraint(equalToConstant:490).isActive=true
         t.widthAnchor.constraint(equalTo:b.widthAnchor).isActive=true
+        scale.widthAnchor.constraint(equalTo:b.widthAnchor).isActive=true
+        lens.widthAnchor.constraint(equalTo:b.widthAnchor).isActive=true
         note.widthAnchor.constraint(equalTo:b.widthAnchor).isActive=true
         pin(content,to:panel.contentView!,inset:26)
         window.beginSheet(panel)
+    }
+    @objc func enlargeView() {
+        view.screenScale=1; view.fov=45
+        screenScaleSlider?.doubleValue=100
+        screenScaleText?.stringValue="画面缩放  100%"
+        settingsFOVSlider?.doubleValue=65
+        settingsFOVText?.stringValue="景物放大 · 视场角 45°"
+        UserDefaults.standard.set(1.0,forKey:"screenScale")
+        UserDefaults.standard.set(45.0,forKey:"fov")
+        hardwareStatus?.stringValue="已铺满画面并放大景物；仍可继续调整"
+        interact()
+    }
+    @objc func adjustScreenScale() {
+        guard let slider=screenScaleSlider else { return }
+        view.screenScale=Float(slider.doubleValue/100)
+        screenScaleText?.stringValue="画面缩放  \(Int(slider.doubleValue.rounded()))%"
+        UserDefaults.standard.set(Double(view.screenScale),forKey:"screenScale")
+        hardwareStatus?.stringValue="画面大小已调整，头追模式保持不变"
+        interact()
+    }
+    @objc func adjustSettingsFOV() {
+        guard let slider=settingsFOVSlider else { return }
+        view.fov=Float(110-slider.doubleValue)
+        settingsFOVText?.stringValue="景物放大 · 视场角 \(Int(view.fov))°"
+        UserDefaults.standard.set(Double(view.fov),forKey:"fov")
+        hardwareStatus?.stringValue="景物大小已调整，画面外框保持不变"
+        interact()
     }
     @objc func adjustBrightness() {
         guard let slider=brightnessSlider else { return }
@@ -304,6 +358,7 @@ final class App: NSObject, NSApplicationDelegate, NSWindowDelegate {
         catch { hardwareStatus?.stringValue=error.localizedDescription }
     }
     @objc func adjustRefresh() {
+        guard !switchingResolution else { return }
         guard let hz=refreshPicker?.selectedItem?.tag else { return }
         do {
             try sdk.setRefreshRate(hz)
@@ -321,6 +376,69 @@ final class App: NSObject, NSApplicationDelegate, NSWindowDelegate {
             catch { hardwareStatus?.stringValue="\(failure)；恢复失败，请断开眼镜后重新连接。" }
         }
         refreshPicker?.selectItem(withTag:sdk.refreshRate)
+        resolutionPicker?.selectItem(withTag:sdk.resolutionHeight ?? 1080)
+    }
+    @objc func adjustResolution() {
+        guard !switchingResolution, let height=resolutionPicker?.selectedItem?.tag else { return }
+        let previous: GlassesSDK.DisplaySnapshot
+        do { previous=try sdk.displaySnapshot() }
+        catch { hardwareStatus?.stringValue=error.localizedDescription; return }
+        let targetScreen=NSScreen.screens.first { $0.localizedName.lowercased().contains("viture") || $0.localizedName.lowercased().contains("beast") }
+        guard let displayID=(targetScreen?.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber)?.uint32Value,
+              let previousHost=CGDisplayCopyDisplayMode(displayID) else {
+            hardwareStatus?.stringValue="未找到眼镜显示器，无法验证输出分辨率"; return
+        }
+        var changedHost=false
+        switchingResolution=true
+        resolutionPicker?.isEnabled=false; refreshPicker?.isEnabled=false; connectButton.isEnabled=false
+        hardwareStatus?.stringValue="正在切换并验证 1920 × \(height) · 60Hz…"
+        func finish(_ message: String) {
+            self.switchingResolution=false
+            self.resolutionPicker?.isEnabled=self.sdk.connected
+            self.refreshPicker?.isEnabled=self.sdk.connected; self.connectButton.isEnabled=true
+            self.resolutionPicker?.selectItem(withTag:self.sdk.resolutionHeight ?? 1080)
+            self.refreshPicker?.selectItem(withTag:self.sdk.refreshRate)
+            self.view.preferredFramesPerSecond=self.sdk.refreshRate
+            self.hardwareStatus?.stringValue=message
+            self.notice(message)
+        }
+        func rollback(_ reason: String) {
+            do {
+                try self.sdk.restoreDisplay(previous)
+                if changedHost && CGDisplaySetDisplayMode(displayID,previousHost,nil) != .success {
+                    finish("\(reason)；眼镜已恢复，macOS 显示模式需在系统设置中恢复。")
+                } else { finish("\(reason)；已恢复原模式。") }
+            }
+            catch { finish("\(reason)；\(error.localizedDescription)") }
+        }
+        do { try sdk.setResolution(height) }
+        catch { rollback(error.localizedDescription); return }
+        let deadline=ProcessInfo.processInfo.systemUptime+6
+        func verify() {
+            guard self.switchingResolution else { return }
+            let hostMatches=NSScreen.screens.contains { screen in
+                guard screen.localizedName.lowercased().contains("viture") || screen.localizedName.lowercased().contains("beast"),
+                      let id=screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber,
+                      let mode=CGDisplayCopyDisplayMode(id.uint32Value) else { return false }
+                return mode.pixelWidth == 1920 && mode.pixelHeight == height && abs(mode.refreshRate-60)<1
+            }
+            if hostMatches && self.sdk.resolutionMatches(height) {
+                finish("已验证 1920 × \(height) · 60Hz，头追保持开启")
+            } else if ProcessInfo.processInfo.systemUptime >= deadline {
+                rollback("未确认原生 \(height)p 输出（HiDPI 缩放不算）")
+            } else {
+                if !changedHost, self.sdk.resolutionMatches(height),
+                   let modes=CGDisplayCopyAllDisplayModes(displayID,nil) as? [CGDisplayMode],
+                   let native=modes.first(where:{ $0.pixelWidth == 1920 && $0.pixelHeight == height && $0.width == 1920 && $0.height == height && abs($0.refreshRate-60)<1 }) {
+                    changedHost=true
+                    if CGDisplaySetDisplayMode(displayID,native,nil) != .success {
+                        rollback("macOS 拒绝切换分辨率"); return
+                    }
+                }
+                DispatchQueue.main.asyncAfter(deadline:.now()+0.5,execute:verify)
+            }
+        }
+        DispatchQueue.main.asyncAfter(deadline:.now()+0.5,execute:verify)
     }
     @objc func adjustDuty() {
         guard let value=dutyPicker?.selectedItem?.tag else { return }
@@ -332,8 +450,8 @@ final class App: NSObject, NSApplicationDelegate, NSWindowDelegate {
         do { let level=Int(slider.intValue); try sdk.setTint(level); tintText?.stringValue="镜片遮光  \(level) / 8"; hardwareStatus?.stringValue="镜片遮光已应用" }
         catch { hardwareStatus?.stringValue=error.localizedDescription }
     }
-    @objc func closeSettings() { if let panel=settingsPanel { window.endSheet(panel); settingsPanel=nil }; interact() }
-    @objc func about() { NSApp.orderFrontStandardAboutPanel(options:[.applicationName:"Beast Panorama",.applicationVersion:"0.2.0",.credits:NSAttributedString(string:"本地 360° 全景播放器\n支持 Beast 3DoF 头追 · 当前为 SDR 输出")]) }
+    @objc func closeSettings() { guard !switchingResolution else { return }; if let panel=settingsPanel { window.endSheet(panel); settingsPanel=nil }; interact() }
+    @objc func about() { NSApp.orderFrontStandardAboutPanel(options:[.applicationName:"Beast Panorama",.applicationVersion:Bundle.main.object(forInfoDictionaryKey:"CFBundleShortVersionString") as? String ?? "Development",.credits:NSAttributedString(string:"本地 360° 全景播放器\n支持 Beast 3DoF 头追 · 当前为 SDR 输出")]) }
     @objc func quit() { NSApp.terminate(nil) }
     func windowDidResize(_ notification: Notification) {
         window.contentView?.needsLayout=true

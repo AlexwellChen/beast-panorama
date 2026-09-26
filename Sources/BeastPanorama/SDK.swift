@@ -141,6 +141,54 @@ final class GlassesSDK {
         let tint: Float?
         let mode: Int32?
     }
+    struct DisplaySnapshot {
+        let native: Int32
+        let mode: Int32
+        let refresh: Int
+    }
+    func displaySnapshot() throws -> DisplaySnapshot {
+        guard connected else { throw SDKError(message: "请先连接眼镜") }
+        let native = try get("xr_device_provider_native_get_mode")
+        guard native == 0 || native == 1 else { throw SDKError(message: "无法读取显示模式") }
+        let mode = try get(native == 0 ? "xr_device_provider_get_display_mode" : "xr_device_provider_native_get_display_mode")
+        try check(mode, "读取输出格式")
+        return DisplaySnapshot(native: native, mode: mode, refresh: refreshRate)
+    }
+    func setResolution(_ height: Int) throws {
+        guard connected, height == 1080 || height == 1200 else { throw SDKError(message: "请选择 1080p 或 1200p") }
+        // Stay in bypass: the player, not the glasses' native screen, owns head tracking.
+        try set("xr_device_provider_native_set_mode", 0)
+        try set("xr_device_provider_set_display_mode", height == 1200 ? 0x41 : 0x31)
+        let open = try fn("xr_device_provider_open_imu", (@convention(c) (Handle?, UInt8, UInt8) -> Int32).self)
+        try check(open(handle, 1, 0), "设置 60Hz 姿态采样")
+        refreshRate = 60
+    }
+    func resolutionMatches(_ height: Int) -> Bool {
+        guard let state = try? displaySnapshot() else { return false }
+        return state.native == 0 && state.mode == (height == 1200 ? 0x41 : 0x31)
+    }
+    func restoreDisplay(_ state: DisplaySnapshot) throws {
+        try set("xr_device_provider_native_set_mode", state.native)
+        try set(state.native == 0 ? "xr_device_provider_set_display_mode" : "xr_device_provider_native_set_display_mode", state.mode)
+        let open = try fn("xr_device_provider_open_imu", (@convention(c) (Handle?, UInt8, UInt8) -> Int32).self)
+        try check(open(handle, 1, state.refresh == 120 ? 2 : 0), "恢复姿态采样")
+        refreshRate = state.refresh
+        let restored = try displaySnapshot()
+        guard restored.native == state.native && restored.mode == state.mode else {
+            throw SDKError(message: "眼镜原显示模式未恢复，请重新连接")
+        }
+    }
+    var resolutionHeight: Int? {
+        guard let state = try? displaySnapshot() else { return nil }
+        if state.native == 0 {
+            if [Int32(0x31),0x33,0x34].contains(state.mode) { return 1080 }
+            if [Int32(0x41),0x43,0x44].contains(state.mode) { return 1200 }
+        } else {
+            if (0x31...0x33).contains(state.mode) { return 1080 }
+            if (0x34...0x36).contains(state.mode) { return 1200 }
+        }
+        return nil
+    }
     func displaySettings() -> DisplaySettings {
         func value(_ name: String, range: ClosedRange<Int32>) -> Int32? {
             guard connected, let v = try? get(name), range.contains(v) else { return nil }; return v

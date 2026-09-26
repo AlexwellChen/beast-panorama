@@ -9,6 +9,7 @@ final class PanoramaView: MTKView, MTKViewDelegate {
     var yaw: Float = 0
     var pitch: Float = 0
     var fov: Float = 60
+    var screenScale: Float = 1
     var tracking = false
     var origin: simd_quatf?
     var onStatus: ((String) -> Void)?
@@ -35,7 +36,9 @@ final class PanoramaView: MTKView, MTKViewDelegate {
             V o; o.p=float4(p[id],0,1); o.uv=p[id]; return o;
         }
         fragment float4 fragmentMain(V in [[stage_in]], constant U& u [[buffer(0)]], texture2d<float> tex [[texture(0)]]) {
-            float3 ray=normalize(float3(in.uv.x*u.lens.x*u.lens.y,in.uv.y*u.lens.y,-1));
+            float2 screen = in.uv / clamp(u.lens.z, 0.4f, 2.0f);
+            if (abs(screen.x) > 1 || abs(screen.y) > 1) return float4(0,0,0,1);
+            float3 ray=normalize(float3(screen.x*u.lens.x*u.lens.y,screen.y*u.lens.y,-1));
             ray=(u.rotation*float4(ray,0)).xyz;
             float2 uv=float2(atan2(ray.x,-ray.z)/(2*M_PI_F)+0.5,0.5-asin(clamp(ray.y,-1.0,1.0))/M_PI_F);
             constexpr sampler s(s_address::repeat,t_address::clamp_to_edge,filter::linear);
@@ -106,14 +109,15 @@ final class PanoramaView: MTKView, MTKViewDelegate {
     func recenter() { origin = nil; yaw = 0; pitch = 0 }
     override func mouseDown(with event: NSEvent) { onInteraction?(); lastPointer = event.locationInWindow; window?.makeFirstResponder(self) }
     override func mouseDragged(with event: NSEvent) {
-        guard !tracking else { return }
+        onInteraction?()
         let current = event.locationInWindow
         let previous = lastPointer ?? current
         lastPointer = current
-        yaw += Float(current.x - previous.x)*0.005
+        yaw = (yaw + Float(current.x - previous.x)*0.005).remainder(dividingBy: 2 * .pi)
         pitch = min(1.5,max(-1.5,pitch - Float(current.y - previous.y)*0.005))
     }
-    override func scrollWheel(with event: NSEvent) { onInteraction?(); fov = min(90,max(30,fov+Float(event.scrollingDeltaY)*0.2)) }
+    override func mouseUp(with event: NSEvent) { lastPointer = nil; onInteraction?() }
+    override func scrollWheel(with event: NSEvent) { onInteraction?(); fov = min(90,max(20,fov+Float(event.scrollingDeltaY)*0.2)) }
     override func draggingEntered(_ sender: NSDraggingInfo) -> NSDragOperation { .copy }
     override func performDragOperation(_ sender: NSDraggingInfo) -> Bool {
         guard let urls = sender.draggingPasteboard.readObjects(forClasses: [NSURL.self], options: [.urlReadingFileURLsOnly: true]) as? [URL], let url = urls.first else { return false }
@@ -129,13 +133,14 @@ final class PanoramaView: MTKView, MTKViewDelegate {
         buffer.addCompletedHandler { _ in withExtendedLifetime(videoFrame) {} }
         let (pose,time,count)=PoseStore.shared.read()
         let age=ProcessInfo.processInfo.systemUptime-time
-        var rotation = simd_quatf(angle:yaw,axis:SIMD3(0,1,0))*simd_quatf(angle:pitch,axis:SIMD3(1,0,0))
+        var head: simd_quatf?
         if tracking && count > 0 {
             if origin == nil { origin = pose }
-            rotation = origin!.inverse * pose
+            head = origin!.inverse * pose
         }
+        let rotation = viewingRotation(yaw: yaw, pitch: pitch, head: head)
         struct Uniforms { var rotation: simd_float4x4; var lens: SIMD4<Float> }
-        var uniforms=Uniforms(rotation:simd_float4x4(rotation),lens:SIMD4(Float(drawableSize.width/max(1,drawableSize.height)),tan(fov * .pi/360),0,0))
+        var uniforms=Uniforms(rotation:simd_float4x4(rotation),lens:SIMD4(Float(drawableSize.width/max(1,drawableSize.height)),tan(fov * .pi/360),screenScale,0))
         encoder.setRenderPipelineState(pipeline)
         encoder.setFragmentBytes(&uniforms,length:MemoryLayout<Uniforms>.stride,index:0)
         encoder.setFragmentTexture(panorama,index:0)

@@ -12,13 +12,15 @@ Built with Swift, AppKit, Metal and AVFoundation. Open local equirectangular ima
 - 3DoF head tracking, manual recentering and adjustable field of view.
 - Auto-hiding playback controls, seeking, volume, mute and drag-and-drop.
 - Device brightness, lens tint and display duty-cycle controls when supported.
+- Picture scaling (40–200%, cropping edges above 100%) and 20–90° field-of-view controls retain head tracking. These do not change optical focus or physical viewing distance. A one-click viewing preset fills the canvas at 45° FOV.
 - Validated 60Hz path; experimental 120Hz switching with readback and fallback.
+- Native 1920×1080 / 1920×1200 output selection at 60Hz with device and host verification. 1200p60 was verified on the local Beast setup.
 
 **120Hz has not worked on the tested headset.** Commands were accepted but the device and macOS remained at 60Hz. HDR is currently an SDR preview; stereoscopic video is not supported. This is an independent community project, not an official VITURE product.
 
 ## Requirements
 
-For a ready-to-use installation, download **`Beast-Panorama-0.2.0-arm64-with-sdk.dmg`** from [Releases](https://github.com/AlexwellChen/beast-panorama/releases/tag/v0.2.0). It includes the locally tested proprietary SDK; no separate SDK selection is needed. Review its SDK terms, provenance and outstanding third-party compliance disclosures in the release notes. An SDK-free DMG is also available. The source repository and default builds remain SDK-free.
+For a ready-to-use installation, download **`Beast-Panorama-0.3.0-arm64-with-sdk.dmg`** from [Releases](https://github.com/AlexwellChen/beast-panorama/releases/tag/v0.3.0). It includes the locally tested proprietary SDK; no separate SDK selection is needed. Review its SDK terms, provenance and outstanding third-party compliance disclosures in the release notes. An SDK-free DMG is also available. The source repository and default builds remain SDK-free.
 
 - Apple Silicon Mac, macOS 13 or later.
 - Xcode or Apple Command Line Tools with Swift 5.9 or newer to build.
@@ -47,7 +49,7 @@ The current UI is in Simplified Chinese.
 | ← / → | Seek five seconds |
 | M | Toggle mute |
 | ⌘, | Glasses display settings |
-| Mouse drag / scroll | Look around without tracking / adjust field of view |
+| Mouse drag / scroll | Adjust viewing direction (also during head tracking) / adjust field of view |
 
 ## Package a DMG
 
@@ -55,7 +57,7 @@ The current UI is in Simplified Chinese.
 ./scripts/build-dmg.sh
 ```
 
-Produces `dist/public/Beast-Panorama-0.2.0-arm64.dmg` and a SHA-256 checksum. The default DMG contains **no vendor SDK** and supports selecting an external SDK after installation. It is ad-hoc signed, not Developer ID signed or notarized. Do not publish the earlier private, SDK-bundled test DMG as an open-source release.
+Produces `dist/public/Beast-Panorama-0.3.0-arm64.dmg` and a SHA-256 checksum. The default DMG contains **no vendor SDK** and supports selecting an external SDK after installation. It is ad-hoc signed, not Developer ID signed or notarized. Do not publish the earlier private, SDK-bundled test DMG as an open-source release.
 
 The vendor permits conditional SDK bundling, but this release has not verified all distribution requirements for the available binary. See [SDK licensing](docs/sdk-licensing.md) and [privacy](Resources/Privacy.txt).
 

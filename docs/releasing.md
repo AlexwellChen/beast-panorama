@@ -1,5 +1,7 @@
 # Release guide
 
+v0.3.0 ships the updated player in both SDK-free and SDK-bundled DMGs. The bundled variant retains the same SDK 2.4.0 provenance, end-user terms and unresolved third-party disclosures as v0.2.0. See [v0.3.0 release notes](releases/v0.3.0.md). Do not upload local samples or test recordings.
+
 Release update: v0.2.0 also offers a manually packaged `with-sdk.dmg` at the maintainer's direction. Its executable is unchanged from the v0.2.0 tag; packaging adds the tested SDK libraries, end-user terms, available notices and provenance disclosures. The SDK compliance questions remain open. The automated process below continues to produce the SDK-free variant.
 
 ## Public release
